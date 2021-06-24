@@ -24,17 +24,7 @@ class Postman(Thread):
 
     def run(self):
 
-        MCAST_GRP = self.MCAST_GRP #'224.1.1.1'
-        MCAST_PORT = self.MCAST_PORT #5007
-        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('', MCAST_PORT))
-        mreq = struct.pack('4sl', socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-        self.sockTop = sock
-        ready_msg = 'OK'
-        self._send_mensage(ready_msg)
+        self._config_nodo()
         
         while True:
             self._recieve()
@@ -50,6 +40,20 @@ class Postman(Thread):
     
     def event(self):
         pass
+    
+    def _config_nodo(self):
+
+        MCAST_GRP = self.MCAST_GRP #'224.1.1.1'
+        MCAST_PORT = self.MCAST_PORT #5007
+        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(('', MCAST_PORT))
+        mreq = struct.pack('4sl', socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self.sockTop = sock
+        ready_msg = 'OK'
+        self._send_mensage(ready_msg)
 
     def _send_mensage(self, msg, IP='224.1.1.1', PORT=5007):
         msg_formated = str(self.threadID) +':' + msg
