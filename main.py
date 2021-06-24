@@ -1,14 +1,15 @@
 import threading
 import socket
 import struct
+import sys
 
 from postman import Postman as pst
 
 
-def main():
+def main(id):
 
     nodo = pst(
-                threadID = 1, 
+                threadID = id,
                 counterEvents = 100, 
                 IP = '127.0.0.1', 
                 PORT = 5000, 
@@ -34,4 +35,4 @@ def main():
     # recv.join()
 
 if __name__ == "__main__":
-    main()
+    main(int(sys.argv[1]))
