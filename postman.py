@@ -1,8 +1,9 @@
 import socket
 import struct
 import os
-from threading import Thread
+import time
 
+from threading import Thread
 from delivery import Delivery as dy
 from comunication import Comunication as com
 
@@ -16,6 +17,7 @@ class Postman(Thread):
       self.counterEvents = 0
       self.IP = IP
       self.PORT = PORT
+      self.sock_uni = None
       self.sockTop = None
       self.MCAST_GRP = MCAST_GRP 
       self.MCAST_PORT = MCAST_PORT
@@ -24,24 +26,40 @@ class Postman(Thread):
 
     def run(self):
 
-        self._config_nodo()
+        self._config_nodo_mult()
+        self._config_nodo_uni()
         
         while True:
             self._recieve()
             go = b'0:GO' in list(self._start)
             print(go)
             print(self._start)
-            if len(self._start)>2 or go :
+            if len(self._start)>1 or go :
                 break
 
         if self.threadID == 0:
             self._send_mensage('GO')
-        print("feito")
-    
+        print("Vamo dale")
+
+        finish = self.event()
+        print(finish)
+
     def event(self):
-        pass
-    
-    def _config_nodo(self):
+            even = com(dy.EVENT, self.sock_uni)
+            even.start()
+
+            lis = com(dy.RECIEVE, self.sock_uni)
+            lis.start()
+
+            even.join()
+            lis.join()
+            
+            while even.msg is None:
+                pass
+            
+            return True
+
+    def _config_nodo_mult(self):
 
         MCAST_GRP = self.MCAST_GRP #'224.1.1.1'
         MCAST_PORT = self.MCAST_PORT #5007
@@ -55,6 +73,17 @@ class Postman(Thread):
         ready_msg = 'OK'
         self._send_mensage(ready_msg)
 
+    def _config_nodo_uni(self):
+
+        MCAST_GRP = self.IP #'224.1.1.1'
+        MCAST_PORT = self.IP #5007
+        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        mreq = struct.pack('4sl', socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self.sock_uni = sock
+
     def _send_mensage(self, msg, IP='224.1.1.1', PORT=5007):
         msg_formated = str(self.threadID) +':' + msg
         msg_byte = bytes(msg_formated, 'utf_8')
@@ -67,4 +96,7 @@ class Postman(Thread):
         recv = com(dy.RECIEVE, self.sockTop, IP, PORT)
         recv.start()
         recv.join()
-        self._start.add(recv.msg)
+        if len(self._start)>1:
+            print(recv.msg)
+        else:
+            self._start.add(recv.msg)
