@@ -34,9 +34,10 @@ class Comunication(Thread):
                 self.sock.sendto(b'1', ('10.0.2.15', 5002))
                 print('alokjcs')
                 self._timer()
+                i+=1
             
             self.msg = True
 
     def _timer(self):
-        hit = 69
+        hit = 3
         time.sleep(hit)
