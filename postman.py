@@ -3,6 +3,7 @@ import struct
 import os
 import time
 
+from storage import Storage stg
 from threading import Thread
 from delivery import Delivery as dy
 from comunication import Comunication as com
@@ -12,18 +13,19 @@ class Postman(Thread):
     
 
     def __init__(self, threadID, counterEvents, IP, PORT, MCAST_GRP, MCAST_PORT):
-      Thread.__init__(self)
-      self.threadID = threadID
-      self.counterEvents = 0
-      self.IP = IP
-      self.PORT = PORT
-      self.sock_uni = None
-      self.sockTop = None
-      self.MCAST_GRP = MCAST_GRP 
-      self.MCAST_PORT = MCAST_PORT
-      self._msgs = None
-      self._start = set()
-
+        Thread.__init__(self)
+        self.threadID = threadID
+        self.counterEvents = 0
+        self.IP = IP
+        self.PORT = PORT
+        self.sock_uni = None
+        self.sockTop = None
+        self.MCAST_GRP = MCAST_GRP 
+        self.MCAST_PORT = MCAST_PORT
+        self._msgs = None
+        self._start = set()
+        self.storage = None
+    
     def run(self):
 
         self._config_nodo_mult()
@@ -83,6 +85,18 @@ class Postman(Thread):
         mreq = struct.pack('4sl', socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         self.sock_uni = sock
+
+    def _setup(self):
+        data_aux = None
+        with open('config.txt','r') as file:
+            data_aux = file.read_lines()
+
+        self.storage = stg()
+        for i in data_aux:
+            format_info = i.split(' ')
+            self.storage.add_node_info(format_info)
+        # TODO set storage to a singleton object
+
 
     def _send_mensage(self, msg, IP='224.1.1.1', PORT=5007):
         msg_formated = str(self.threadID) +':' + msg
