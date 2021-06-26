@@ -78,13 +78,15 @@ class Postman(Thread):
     def _config_nodo_uni(self):
 
         MCAST_GRP = self.IP #'224.1.1.1'
-        MCAST_PORT = self.IP #5007
+        MCAST_PORT = self.PORT #5007
         
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         mreq = struct.pack('4sl', socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        sock.bind(('', MCAST_PORT))
+        #sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         self.sock_uni = sock
+        
 
     def _setup(self):
         data_aux = None

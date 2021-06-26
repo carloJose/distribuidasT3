@@ -1,6 +1,7 @@
 import socket
 import struct
 import os
+import time
 from threading import Thread
 
 from delivery import Delivery as dy
@@ -30,11 +31,13 @@ class Comunication(Thread):
         else:
             i = 0
             while i < 5: 
-                self.sock.sendto(b'1', ('127.0.0.1', '5002'))
+                self.sock.sendto(b'1', ('10.0.2.15', 5002))
+                print('alokjcs')
                 self._timer()
+                i+=1
             
             self.msg = True
 
     def _timer(self):
-        hit = range(100, 350)
-        time(hit)
+        hit = 3
+        time.sleep(hit)
