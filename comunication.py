@@ -37,8 +37,9 @@ class Comunication(Thread):
                     msg = self.sock.recv(4096)
                     self.msg = msg
                     # print(msg)
-                    print('Recebeu')
-                    print(self.time_trip(msg))
+                    print("Recebido")
+                    id_from, id_local = self.invert_ids(msg)
+                    print(id_local+self.time_trip(msg)+'R'+id_from)
                     if self.IP is not None:
                         break
             except:
@@ -59,11 +60,14 @@ class Comunication(Thread):
                 origin_port = int(self.stg.get_data_by_index(self.thread_id)[1])
                 
                 if ip_dest == origin_ip and port_dest == origin_port:
-                    print('Local')
-                    print(self.time_trip())
+                    print("Local")
+                    print(str(self.thread_id)+str(self.time_trip())+'L')
                     
                 else:
-                    msg_to_send = str(self.thread_id) + str(self.watch_local.watch) + str(port_dest)
+                    id_target = self.get_destination_id(ip_dest,port_dest)
+                    msg_to_send = str(self.thread_id) + str(self.watch_local.watch) +'S'+str(id_target)
+                    print("Enviado")
+                    print(msg_to_send)
                     self.sock.sendto(bytes(msg_to_send, 'utf_8'), (ip_dest, port_dest))
                     
                 self._timer()
@@ -112,21 +116,15 @@ class Comunication(Thread):
                    new[i] = max(new[i],local[i])
             
             self.watch_local.watch = new  
-            return self.watch_local.watch
-            # print('Era ',local)
-            # other = time_recieve.decode().split('[')[1].split(']')[0].split(',')
-            # new = other.copy()
-            # new[self.thread_id] = local[self.thread_id]
-            # for i in range(len()):
-            #     if i == self.thread_id:
-            #         continue
-            #     else:
-            #        new[i] = max(new[i],local[i])
-            
-            # self.watch_local.watch = new
-            # print('Era ',new)
-            # come = time_recieve.decode().split('[')[0]
-            # to = time_recieve.decode().split(']')[1]
-            # return come+str(new)+to
+            return str(self.watch_local.watch)
+    
+    def get_destination_id(self,ip,port):
+        for i in range(len(self.stg.data)):
+            if str(self.stg.data[i][0]).strip() == str(ip).strip() and int(self.stg.data[i][1]) == int(port):
+                return str(i)
                 
-            
+    def invert_ids(self, came):
+        came = came.decode()
+        came_from = came.split('[')[0]
+        came_to = came.split('S')[1]
+        return came_from, came_to
