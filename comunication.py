@@ -9,6 +9,7 @@ from storage import Storage as stg
 from threading import Thread
 from delivery import Delivery as dy
 
+# Faz as comunicações
 class Comunication(Thread):
 
     def __init__(self, delivery_type, sock, thread_id, IP = None, PORT = None, msg = None):
@@ -26,6 +27,7 @@ class Comunication(Thread):
     
     def run(self):
 
+        # recebe as msgs
         if self.delivery_type == dy.RECIEVE:
             if self.IP is not None:
                 print('Listening Multicast...')
@@ -45,9 +47,11 @@ class Comunication(Thread):
             except:
                 exit()
         
+        # envia msgs somente
         elif self.delivery_type == dy.SEND:
             self.sock.sendto(self.msg, (self.IP, self.PORT))
         
+        # tem a logica que faz os eventos
         else:
             i = 0
             done = int(self.stg.get_data_by_index(self.thread_id)[3])
@@ -76,13 +80,15 @@ class Comunication(Thread):
             return 'Done'
 
     def _timer(self):
-        
+        # faz o range entre o minimo delay e maximo dalay para o sleep
         min_d = float(self.stg.get_data_by_index(self.thread_id)[4])
         max_d = float(self.stg.get_data_by_index(self.thread_id)[5].replace('\n',''))
         hit = random.randint(min_d, max_d)
         time.sleep(hit*0.001)
     
     def select_destination(self):
+        
+        # sorteia o nodo destino
         max_chance = None
         hit = random.uniform(0,1)
         
@@ -94,10 +100,12 @@ class Comunication(Thread):
             if max_chance is None or chance > float(max_chance[2]):
                 max_chance = i
                     
-
+        # se noa sortar dentro das chances, envia para oq eu tinha maior chance
         return max_chance[:2]
     
     def time_trip(self, time_recieve = None):
+        # atualiza os relogios
+        
         if time_recieve is None:
             self.watch_local.watch[self.thread_id] += 1
             return self.watch_local.watch
@@ -108,7 +116,7 @@ class Comunication(Thread):
             local = self.watch_local.watch.copy()
             other = [int(i) for i in time_recieve.decode().split('[')[1].split(']')[0].split(',')]
             new = other.copy()
-            new[self.thread_id] = local[self.thread_id]
+            new[self.thread_id] = int(local[self.thread_id])
             for i in range(len(new)):
                 if i == self.thread_id:
                     continue
@@ -119,11 +127,15 @@ class Comunication(Thread):
             return str(self.watch_local.watch)
     
     def get_destination_id(self,ip,port):
+        # pega o id do destuinatario no arquivo
+        
         for i in range(len(self.stg.data)):
             if str(self.stg.data[i][0]).strip() == str(ip).strip() and int(self.stg.data[i][1]) == int(port):
                 return str(i)
                 
     def invert_ids(self, came):
+        # pega o recebido e inverte os ids para seguir o padrao de print
+        
         came = came.decode()
         came_from = came.split('[')[0]
         came_to = came.split('S')[1]

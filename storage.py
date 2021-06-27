@@ -1,5 +1,6 @@
 from metaSingleton import MetaSingleton
 
+#guarda os dados do arquivo de configuracao
 class Storage(metaclass=MetaSingleton):
 
     def __init__(self):

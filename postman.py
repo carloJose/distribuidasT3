@@ -10,7 +10,7 @@ from threading import Thread
 from delivery import Delivery as dy
 from comunication import Comunication as com
 
-
+# Organiza o nodo
 class Postman(Thread):
     
 
@@ -34,15 +34,19 @@ class Postman(Thread):
         self._setup()        
         self._config_nodo_mult()
         self._config_nodo_uni()
+        # inicia o relogio vetorial com  zeros com espacos para todos os nodos previstos pelo arquivo de configuracao
         self.watch_local.watch = [0] * len(self.storage.data)
         try:
             while True:
                 self._recieve()
+                
+                # quando nao é o nogo id zero, só inicia quando recebe o GO
                 go = b'0:GO' in list(self._start)
                 if len(self._start)>1 or go :
                     break
 
             if self.threadID == 0:
+                # quando for id zero e ver que todos os nodos previstos entraram, envia o GO via multicast
                 self._send_mensage('GO')
             print("Vamo dale")
             
@@ -59,6 +63,7 @@ class Postman(Thread):
             exit()
 
     def event(self):
+        # dispara os envios e o recebimento unicast
             even = com(dy.EVENT, self.sock_uni, self.threadID)
             even.start()
 
@@ -69,7 +74,7 @@ class Postman(Thread):
             return 'done'
 
     def _config_nodo_mult(self):
-
+        # configura o socket multicast usando udp e Datagram
         MCAST_GRP = self.MCAST_GRP #'224.1.1.1'
         MCAST_PORT = self.MCAST_PORT #5007
         
@@ -83,7 +88,8 @@ class Postman(Thread):
         self._send_mensage(ready_msg)
 
     def _config_nodo_uni(self):
-
+        # configura socket unicast
+        
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_address = (self.IP, self.PORT)
         s.bind(server_address)
@@ -92,6 +98,7 @@ class Postman(Thread):
         
 
     def _setup(self):
+        # faz o setup do arquivo de configuracao no storage
         data_aux = None
         with open('config.txt','r') as file:
             data_aux = file.readlines()
@@ -111,6 +118,7 @@ class Postman(Thread):
 
 
     def _send_mensage(self, msg, IP='224.1.1.1', PORT=5007):
+        # envia msg. Basicamente usado para multicast
         msg_formated = str(self.threadID) +':' + msg
         msg_byte = bytes(msg_formated, 'utf_8')
         snd = com(dy.SEND, self.sockTop, self.threadID, IP, PORT, msg_byte)
@@ -118,7 +126,7 @@ class Postman(Thread):
 
 
     def _recieve(self, IP='224.1.1.1', PORT=5007):
-        
+        # recebe msg basicamente multicast
         recv = com(dy.RECIEVE, self.sockTop, self.threadID, IP, PORT)
         recv.start()
         recv.join()
