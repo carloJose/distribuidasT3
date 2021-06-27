@@ -18,4 +18,7 @@ def main(id):
     nodo.join()
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]))
+    try:
+        main(int(sys.argv[1]))
+    except Exception as e:
+        print(e)

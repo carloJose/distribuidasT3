@@ -4,6 +4,7 @@ import os
 import time
 import pdb
 
+from watch import Watch
 from storage import Storage as stg
 from threading import Thread
 from delivery import Delivery as dy
@@ -26,29 +27,36 @@ class Postman(Thread):
         self._msgs = None
         self._start = set()
         self.storage = None
+        self.watch_local = Watch()
     
     def run(self):
 
         self._setup()        
         self._config_nodo_mult()
         self._config_nodo_uni()
-        
-        while True:
-            self._recieve()
-            go = b'0:GO' in list(self._start)
-            if len(self._start)>1 or go :
-                break
+        self.watch_local.watch = [0] * len(self.storage.data)
+        try:
+            while True:
+                self._recieve()
+                go = b'0:GO' in list(self._start)
+                if len(self._start)>1 or go :
+                    break
 
-        if self.threadID == 0:
-            self._send_mensage('GO')
-        print("Vamo dale")
-        
-        #pdb.set_trace()
-        finish = self.event()
-        print(finish)
-        self.sock_uni.close()
-        self.sockTop.close()
-        exit()
+            if self.threadID == 0:
+                self._send_mensage('GO')
+            print("Vamo dale")
+            
+            #pdb.set_trace()
+            finish = self.event()
+            print(finish)
+            self.sock_uni.close()
+            self.sockTop.close()
+            raise Exception("Done")
+            
+        except:
+            self.sock_uni.close()
+            self.sockTop.close()
+            exit()
 
     def event(self):
             even = com(dy.EVENT, self.sock_uni, self.threadID)

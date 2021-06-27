@@ -4,6 +4,7 @@ import os
 import time
 import random
 
+from watch import Watch
 from storage import Storage as stg
 from threading import Thread
 from delivery import Delivery as dy
@@ -19,6 +20,7 @@ class Comunication(Thread):
         self.msg = msg
         self.thread_id = thread_id
         self.stg = stg()
+        self.watch_local = Watch()
         
 
     
@@ -29,13 +31,18 @@ class Comunication(Thread):
                 print('Listening Multicast...')
             else:
                 print('Listening...')
+            try:
                 
-            while True:
-                msg = self.sock.recv(4096)
-                self.msg = msg
-                print(msg)
-                if self.IP is not None:
-                    break
+                while True:
+                    msg = self.sock.recv(4096)
+                    self.msg = msg
+                    # print(msg)
+                    print('Recebeu')
+                    print(self.time_trip(msg))
+                    if self.IP is not None:
+                        break
+            except:
+                exit()
         
         elif self.delivery_type == dy.SEND:
             self.sock.sendto(self.msg, (self.IP, self.PORT))
@@ -52,16 +59,17 @@ class Comunication(Thread):
                 origin_port = int(self.stg.get_data_by_index(self.thread_id)[1])
                 
                 if ip_dest == origin_ip and port_dest == origin_port:
-                    print('igual')
+                    print('Local')
+                    print(self.time_trip())
                     
                 else:
-                    msg_to_send = 'from ip: {} port: {} test: {}'.format(origin_ip, origin_port, i)
+                    msg_to_send = str(self.thread_id) + str(self.watch_local.watch) + str(port_dest)
                     self.sock.sendto(bytes(msg_to_send, 'utf_8'), (ip_dest, port_dest))
                     
                 self._timer()
                 i+=1
             
-            raise Exception('Done')
+            return 'Done'
 
     def _timer(self):
         
@@ -84,3 +92,41 @@ class Comunication(Thread):
                     
 
         return max_chance[:2]
+    
+    def time_trip(self, time_recieve = None):
+        if time_recieve is None:
+            self.watch_local.watch[self.thread_id] += 1
+            return self.watch_local.watch
+        
+        else:
+            #return time_recieve.decode()
+            self.watch_local.watch[self.thread_id] += 1
+            local = self.watch_local.watch.copy()
+            other = [int(i) for i in time_recieve.decode().split('[')[1].split(']')[0].split(',')]
+            new = other.copy()
+            new[self.thread_id] = local[self.thread_id]
+            for i in range(len(new)):
+                if i == self.thread_id:
+                    continue
+                else:
+                   new[i] = max(new[i],local[i])
+            
+            self.watch_local.watch = new  
+            return self.watch_local.watch
+            # print('Era ',local)
+            # other = time_recieve.decode().split('[')[1].split(']')[0].split(',')
+            # new = other.copy()
+            # new[self.thread_id] = local[self.thread_id]
+            # for i in range(len()):
+            #     if i == self.thread_id:
+            #         continue
+            #     else:
+            #        new[i] = max(new[i],local[i])
+            
+            # self.watch_local.watch = new
+            # print('Era ',new)
+            # come = time_recieve.decode().split('[')[0]
+            # to = time_recieve.decode().split(']')[1]
+            # return come+str(new)+to
+                
+            
