@@ -58,8 +58,7 @@ class Comunication(Thread):
                     msg_to_send = 'from ip: {} port: {} test: {}'.format(origin_ip, origin_port, i)
                     self.sock.sendto(bytes(msg_to_send, 'utf_8'), (ip_dest, port_dest))
                     
-                time.sleep(5)
-                #self._timer()
+                self._timer()
                 i+=1
             
             raise Exception('Done')

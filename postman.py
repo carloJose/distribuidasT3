@@ -56,11 +56,6 @@ class Postman(Thread):
 
             lis = com(dy.RECIEVE, self.sock_uni, self.threadID)
             lis.start()
-            
-            while True:
-                print(lis.msg)
-            
-
             even.join()
             
             return 'done'
