@@ -10,9 +10,6 @@ def main(id):
 
     nodo = pst(
                 threadID = id,
-                counterEvents = 100, 
-                IP = '10.0.2.4', 
-                PORT = 5000, 
                 MCAST_GRP = '224.1.1.1', 
                 MCAST_PORT = 5007
                 )

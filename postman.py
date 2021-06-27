@@ -2,8 +2,9 @@ import socket
 import struct
 import os
 import time
+import pdb
 
-from storage import Storage stg
+from storage import Storage as stg
 from threading import Thread
 from delivery import Delivery as dy
 from comunication import Comunication as com
@@ -12,7 +13,7 @@ from comunication import Comunication as com
 class Postman(Thread):
     
 
-    def __init__(self, threadID, counterEvents, IP, PORT, MCAST_GRP, MCAST_PORT):
+    def __init__(self, threadID, MCAST_GRP, MCAST_PORT, counterEvents=0, IP=None, PORT=0000):
         Thread.__init__(self)
         self.threadID = threadID
         self.counterEvents = 0
@@ -28,38 +29,41 @@ class Postman(Thread):
     
     def run(self):
 
+        self._setup()        
         self._config_nodo_mult()
         self._config_nodo_uni()
         
         while True:
             self._recieve()
             go = b'0:GO' in list(self._start)
-            print(go)
-            print(self._start)
             if len(self._start)>1 or go :
                 break
 
         if self.threadID == 0:
             self._send_mensage('GO')
         print("Vamo dale")
-
+        
+        #pdb.set_trace()
         finish = self.event()
         print(finish)
+        self.sock_uni.close()
+        self.sockTop.close()
+        exit()
 
     def event(self):
-            even = com(dy.EVENT, self.sock_uni)
+            even = com(dy.EVENT, self.sock_uni, self.threadID)
             even.start()
 
-            lis = com(dy.RECIEVE, self.sock_uni)
+            lis = com(dy.RECIEVE, self.sock_uni, self.threadID)
             lis.start()
+            
+            while True:
+                print(lis.msg)
+            
 
             even.join()
-            lis.join()
             
-            while even.msg is None:
-                pass
-            
-            return True
+            return 'done'
 
     def _config_nodo_mult(self):
 
@@ -77,39 +81,42 @@ class Postman(Thread):
 
     def _config_nodo_uni(self):
 
-        MCAST_GRP = self.IP #'224.1.1.1'
-        MCAST_PORT = self.PORT #5007
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        server_address = (self.IP, self.PORT)
+        s.bind(server_address)
         
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        mreq = struct.pack('4sl', socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
-        sock.bind(('', MCAST_PORT))
-        #sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-        self.sock_uni = sock
+        self.sock_uni = s
         
 
     def _setup(self):
         data_aux = None
         with open('config.txt','r') as file:
-            data_aux = file.read_lines()
+            data_aux = file.readlines()
 
         self.storage = stg()
         for i in data_aux:
             format_info = i.split(' ')
-            self.storage.add_node_info(format_info)
-        # TODO set storage to a singleton object
+            self.storage.add_node_info(list(format_info))
+        
+        IP_aux = self.storage.get_data_by_index(self.threadID)[0]
+        PORT_aux = int(self.storage.get_data_by_index(self.threadID)[1])
+        N_events_aux= (self.storage.get_data_by_index(self.threadID)[3])
+        self.counterEvents = int(N_events_aux)
+        self.IP = IP_aux
+        self.PORT = int(PORT_aux)
+        
 
 
     def _send_mensage(self, msg, IP='224.1.1.1', PORT=5007):
         msg_formated = str(self.threadID) +':' + msg
         msg_byte = bytes(msg_formated, 'utf_8')
-        snd = com(dy.SEND, self.sockTop, IP, PORT, msg_byte)
+        snd = com(dy.SEND, self.sockTop, self.threadID, IP, PORT, msg_byte)
         snd.start()
 
 
     def _recieve(self, IP='224.1.1.1', PORT=5007):
         
-        recv = com(dy.RECIEVE, self.sockTop, IP, PORT)
+        recv = com(dy.RECIEVE, self.sockTop, self.threadID, IP, PORT)
         recv.start()
         recv.join()
         if len(self._start)>1:
