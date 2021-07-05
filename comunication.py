@@ -57,9 +57,9 @@ class Comunication(Thread):
             done = int(self.stg.get_data_by_index(self.thread_id)[3])
             print(' Lets send {} msgs'.format(done))
             while i < done:
-                
-                ip_dest = self.select_destination()[0]
-                port_dest = int(self.select_destination()[1])
+
+                ip_dest, port_dest = self.select_destination()
+                port_dest = int(port_dest)
                 origin_ip = self.stg.get_data_by_index(self.thread_id)[0]
                 origin_port = int(self.stg.get_data_by_index(self.thread_id)[1])
                 
@@ -69,6 +69,7 @@ class Comunication(Thread):
                     
                 else:
                     id_target = self.get_destination_id(ip_dest,port_dest)
+                    print(id_target)
                     msg_to_send = str(self.thread_id) + str(self.watch_local.watch) +'S'+str(id_target)
                     print("Enviado")
                     print(msg_to_send)
@@ -130,7 +131,7 @@ class Comunication(Thread):
         # pega o id do destuinatario no arquivo
         
         for i in range(len(self.stg.data)):
-            if str(self.stg.data[i][0]).strip() == str(ip).strip() and int(self.stg.data[i][1]) == int(port):
+            if str(self.stg.data[i][0]).strip() == str(ip).strip() and int(self.stg.data[i][1].replace("\n","")) == int(port):
                 return str(i)
                 
     def invert_ids(self, came):

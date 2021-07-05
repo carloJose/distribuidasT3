@@ -84,7 +84,7 @@ class Postman(Thread):
         sock.setsockopt(
             socket.IPPROTO_IP,
             socket.IP_ADD_MEMBERSHIP,
-            struct.pack("4sl", socket.inet_aton(constants.MCAST_GROUP), socket.INADDR_ANY),
+            struct.pack("4sl", socket.inet_aton(MCAST_GRP), socket.INADDR_ANY),
         )
 
         self.sockTop = sock
