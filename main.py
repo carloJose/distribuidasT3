@@ -10,7 +10,7 @@ def main(id):
     # cria nodo
     nodo = pst(
                 threadID = id,
-                MCAST_GRP = '224.3.29.71', 
+                MCAST_GRP = '224.1.1.1', 
                 MCAST_PORT = 5007
                 )
 
