@@ -69,7 +69,6 @@ class Comunication(Thread):
                     
                 else:
                     id_target = self.get_destination_id(ip_dest,port_dest)
-                    print(id_target)
                     msg_to_send = str(self.thread_id) + str(self.watch_local.watch) +'S'+str(id_target)
                     print("Enviado")
                     print(msg_to_send)

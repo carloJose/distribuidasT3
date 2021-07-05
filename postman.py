@@ -42,7 +42,7 @@ class Postman(Thread):
                 
                 # quando nao é o nogo id zero, só inicia quando recebe o GO
                 go = b'0:GO' in list(self._start)
-                if len(self._start)>1 or go :
+                if len(self._start)>len(self.storage.data)-1 or go :
                     break
 
             if self.threadID == 0:
